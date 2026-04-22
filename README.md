@@ -1,6 +1,6 @@
-# CoachAlign
+# Coachellaign
 
-CoachAlign is a simple browser-based posture correction tool that uses your laptop camera to monitor your posture in real time and gently forces you to fix it.
+Coachellaign is a simple browser-based posture correction tool that uses your laptop camera to monitor your posture in real time and gently forces you to fix it.
 Instead of notifications or alerts, it distorts your music when your posture slips. I built this for moments when I’m deep in a flow state and lose body awareness. 
 It’s annoying enough to work, but subtle enough that you won’t just turn it off.
 
