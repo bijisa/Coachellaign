@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coachellaign — Posture x Playlist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik+Mono+One&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <div class="brand-text">
+      <h1>COACHELLAIGN</h1>
+      <div class="tagline">Posture × Playlist · Main Stage 2026</div>
+    </div>
+  </div>
+  <div class="marquee" aria-label="Ticker">
+    <div class="marquee-track">
+      <span>NOW PLAYING: YOUR SPINE</span>
+      <span>SLOUCH = RECORD SCRATCH</span>
+      <span>10 MIN STREAK → BADGE DROP</span>
+      <span>STAGE CAMERA LIVE</span>
+      <span>SIT UP, GET DOWN</span>
+      <span>VIP: GOOD POSTURE ONLY</span>
+    </div>
+  </div>
+  <div class="festival-date">
+    <div class="label">Session</div>
+    <div class="date" id="hdr-time">0:00</div>
+  </div>
+</header>
+
+<!-- Dashboard mosaic -->
+<div class="dash">
+
+  <!-- STAGE (video) — large tile top-left -->
+  <section class="card tile-stage">
+    <div class="card-header">
+      <h2>★ MAIN STAGE</h2>
+      <span class="sub">Live pose feed</span>
+    </div>
+    <div id="video-wrap">
+      <div class="stage-label">REC · CAM 01</div>
+      <div class="stage-corner" id="cam-stamp">STAGE 01</div>
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div id="bad-overlay">
+        <h3 id="nag-title">SIT UP!</h3>
+        <p id="nag-msg">Your music is being distorted</p>
+      </div>
+    </div>
+    <div class="stage-cta-row">
+      <button class="btn primary" id="btn-start" onclick="startCam()">⦿ Start</button>
+      <button class="btn" id="btn-cal" onclick="calibrate()" disabled>Calibrate</button>
+      <button class="btn ghost" id="btn-stop" onclick="stopCam()" disabled>Stop</button>
+    </div>
+  </section>
+
+  <!-- DIAL tile -->
+  <section class="card tile-dial">
+    <div class="card-header">
+      <h2>◎ POSTURE</h2>
+      <span class="sub">Live score</span>
+    </div>
+    <div class="dial-wrap">
+      <div class="dial-face">
+        <div class="dial-arc"></div>
+        <div class="dial-ticks">
+          <span class="t-0">0</span>
+          <span class="t-50">50</span>
+          <span class="t-100">100</span>
+        </div>
+        <div class="dial-needle" id="dial-needle"></div>
+        <div class="dial-hub"></div>
+        <div class="dial-readout">
+          <div class="val" id="m-score">--</div>
+          <div class="lbl">Score</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FESTIVAL PASS metrics -->
+  <section class="card pastel-sherbet tile-pass">
+    <div class="card-header">
+      <h2>⭐ FESTIVAL PASS</h2>
+      <span class="sub">Session</span>
+    </div>
+    <div class="card-body" style="background: linear-gradient(180deg, #fff 0%, #fff8fb 100%);">
+      <div class="metric-row">
+        <div class="metric"><div class="val" id="m-time">0:00</div><div class="lbl">Time</div></div>
+        <div class="metric"><div class="val" id="m-good">0%</div><div class="lbl">In key</div></div>
+        <div class="metric"><div class="val red" id="m-nagged">0</div><div class="lbl">Scratches</div></div>
+        <div class="metric"><div class="val" id="m-badges">0</div><div class="lbl">Badges</div></div>
+      </div>
+      <div class="streak-label-row">
+        <span>10-min streak</span>
+        <span id="streak-lbl">0:00 / 10:00</span>
+      </div>
+      <div class="streak-bar"><div id="streak-fill"></div></div>
+    </div>
+  </section>
+
+  <!-- BACKSTAGE DECK (Spotify) -->
+  <section class="card deck tile-deck">
+    <div class="card-header">
+      <h2>♫ BACKSTAGE DECK</h2>
+      <span class="sub">Spotify transport</span>
+    </div>
+    <div class="card-body">
+      <div class="deck-row">
+        <div class="album-art" id="album-art"></div>
+        <div class="now-info">
+          <div class="status-strip">
+            <span class="dot" id="sp-dot"></span>
+            <span id="sp-status">Not connected</span>
+          </div>
+          <div id="now-playing" class="placeholder">— No track loaded —</div>
+        </div>
+      </div>
+      <div class="transport">
+        <button class="tbtn" onclick="spCmd('previous')">⏮</button>
+        <button class="tbtn primary" id="btn-pp" onclick="togglePlay()">▶</button>
+        <button class="tbtn" onclick="spCmd('next')">⏭</button>
+        <button class="tbtn small" id="btn-shuffle" onclick="toggleShuffle()">⇄ Shuf</button>
+        <button class="tbtn small" id="btn-repeat" onclick="cycleRepeat()">↻ Off</button>
+        <button class="tbtn small" onclick="likeTrack()">♡ Like</button>
+      </div>
+      <div class="knob-row">
+        <div class="slider-row">
+          <label>Vol</label>
+          <input type="range" min="0" max="100" step="1" id="vol" value="80" oninput="setVol(+this.value)">
+          <span class="val" id="vol-v">80</span>
+        </div>
+        <div class="slider-row">
+          <label>Seek</label>
+          <input type="range" min="0" max="100" step="1" id="seek" value="0" oninput="seekPct(+this.value)">
+          <span class="val" id="seek-v">0:00</span>
+        </div>
+      </div>
+      <div class="progress-row">
+        <span id="prog-now">0:00</span>
+        <div class="progress-bar"><div id="sp-prog"></div></div>
+        <span id="prog-end">0:00</span>
+      </div>
+      <details class="setup" id="sp-details">
+        <summary>Setup · Spotify OAuth</summary>
+        <div class="setup-body">
+          <p>1. <a href="https://developer.spotify.com/dashboard" target="_blank">Create a Spotify app</a><br>
+             2. Redirect URI: <code id="redir"></code><br>
+             3. Paste Client ID below.</p>
+          <input type="text" id="cid" placeholder="Spotify Client ID">
+          <button class="btn primary" onclick="doAuth()">Authorize</button>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- DISTORTION FX -->
+  <section class="card pastel-lilac tile-viz">
+    <div class="card-header">
+      <h2>〰 DISTORTION FX</h2>
+      <span class="sub">Scratch engine</span>
+    </div>
+    <div class="card-body" style="background: linear-gradient(180deg, #fff 0%, #f8f0ff 100%);">
+      <canvas class="viz" id="waveform"></canvas>
+      <canvas class="viz" id="spectrum"></canvas>
+      <div class="intensity-row">
+        <span>Intensity</span>
+        <div class="intensity-bar"><div id="int-fill"></div></div>
+        <span id="int-pct">0%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SET LIST chart -->
+  <section class="card pastel-sky tile-chart">
+    <div class="card-header">
+      <h2>📈 SET LIST</h2>
+      <span class="sub">Score timeline</span>
+    </div>
+    <div class="card-body" style="background: linear-gradient(180deg, #fff 0%, #f0f8ff 100%);">
+      <div id="posture-chart-wrap">
+        <canvas id="posture-chart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- BADGE DROP -->
+  <section class="card pastel-mint tile-badges">
+    <div class="card-header">
+      <h2>🎟 BADGE DROP</h2>
+      <span class="sub">Hold 10 min</span>
+    </div>
+    <div class="card-body" style="background: linear-gradient(180deg, #fff 0%, #f0fff8 100%);">
+      <div class="reward-grid" id="reward-grid"></div>
+    </div>
+  </section>
+
+  <!-- SOUNDCHECK -->
+  <section class="card settings tile-settings">
+    <div class="card-header">
+      <h2>⚙ SOUNDCHECK</h2>
+      <span class="sub">Sensitivity</span>
+    </div>
+    <div class="card-body">
+      <div class="slider-row">
+        <label>Slouch</label>
+        <input type="range" min="1" max="10" step="1" value="5" oninput="sens=+this.value;document.getElementById('sv').textContent=this.value">
+        <span class="val" id="sv">5</span>
+      </div>
+      <div class="slider-row">
+        <label>Grace</label>
+        <input type="range" min="1" max="10" step="1" value="3" oninput="graceSec=+this.value;document.getElementById('gv').textContent=this.value">
+        <span class="val" id="gv">3</span>
+      </div>
+      <div class="slider-row">
+        <label>Scratch</label>
+        <input type="range" min="1" max="10" step="1" value="6" oninput="scratchLvl=+this.value;document.getElementById('scv').textContent=this.value">
+        <span class="val" id="scv">6</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CROWD LOG -->
+  <section class="card tile-log">
+    <div class="card-header">
+      <h2>📟 CROWD LOG</h2>
+      <span class="sub">Event feed</span>
+    </div>
+    <div class="card-body">
+      <div id="log">Waiting for camera...</div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast"></div>
+
+<div id="tweaks-panel">
+  <h3>✦ Tweaks ✦</h3>
+  <div class="tweak">
+    <span>Theme</span>
+    <select id="tw-theme">
+      <option value="">Festival (day)</option>
+      <option value="theme-sunset">Sunset</option>
+      <option value="theme-nocturnal">Nocturnal</option>
+      <option value="theme-mint">Mint</option>
+    </select>
+  </div>
+  <div class="tweak">
+    <span>Punishment</span>
+    <select id="tw-punish">
+      <option value="loud">Loud (red)</option>
+      <option value="subtle">Subtle</option>
+      <option value="escalate">Escalating</option>
+    </select>
+  </div>
+  <div class="tweak">
+    <span>Album spin</span>
+    <select id="tw-spin">
+      <option value="on">On</option>
+      <option value="off">Off</option>
+    </select>
+  </div>
+</div>
+
+<script>
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "",
+  "punishment": "loud",
+  "albumSpin": "on"
+}/*EDITMODE-END*/;
+
+(function applyTweaks(t) {
+  document.body.classList.remove('theme-sunset', 'theme-nocturnal', 'theme-mint');
+  if (t.theme) document.body.classList.add(t.theme);
+  document.body.dataset.punish = t.punishment || 'loud';
+  document.body.dataset.spin = t.albumSpin || 'on';
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('tw-theme').value = t.theme || '';
+    document.getElementById('tw-punish').value = t.punishment || 'loud';
+    document.getElementById('tw-spin').value = t.albumSpin || 'on';
+  });
+})(TWEAK_DEFAULTS);
+
+window.addEventListener('message', (e) => {
+  const d = e.data || {};
+  if (d.type === '__activate_edit_mode') document.getElementById('tweaks-panel').classList.add('show');
+  if (d.type === '__deactivate_edit_mode') document.getElementById('tweaks-panel').classList.remove('show');
+});
+window.parent.postMessage({type: '__edit_mode_available'}, '*');
+
+function persistTweak(key, value) {
+  window.parent.postMessage({type: '__edit_mode_set_keys', edits: {[key]: value}}, '*');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('tw-theme').addEventListener('change', (e) => {
+    document.body.classList.remove('theme-sunset', 'theme-nocturnal', 'theme-mint');
+    if (e.target.value) document.body.classList.add(e.target.value);
+    persistTweak('theme', e.target.value);
+  });
+  document.getElementById('tw-punish').addEventListener('change', (e) => {
+    document.body.dataset.punish = e.target.value;
+    persistTweak('punishment', e.target.value);
+  });
+  document.getElementById('tw-spin').addEventListener('change', (e) => {
+    document.body.dataset.spin = e.target.value;
+    const art = document.getElementById('album-art');
+    if (e.target.value === 'on' && window.isPlaying) art.classList.add('spinning');
+    else art.classList.remove('spinning');
+    persistTweak('albumSpin', e.target.value);
+  });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
